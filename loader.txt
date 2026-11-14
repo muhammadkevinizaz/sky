@@ -1,0 +1,134 @@
+-- =================================================================
+    -- SKYP GUI LOADER (Direct GitHub Integration)
+    -- =================================================================
+    local SCRIPT_URL =
+    "https://raw.githubusercontent.com/muhammadkevinizaz/sky/refs/heads/m
+    ain/skyp.lua"
+
+    -- 1. Inisialisasi Environment Session agar skyp.lua tidak error
+    local function initSession()
+        if not getgenv().Session then
+            getgenv().Session = {}
+        end
+        _G.Session = getgenv().Session
+        Session = getgenv().Session
+
+        Session.Lic = Session.Lic or {
+            Ver = "2.3",
+            AdminKey = "",
+            admin = function(path, params)
+                return { total = 0, rows = {} }
+            end
+        }
+    end
+
+    -- 2. Fungsi Mengunduh dan Menjalankan Script
+    local function executeSkyP()
+        initSession()
+
+        local ok, res = pcall(function()
+            return game:HttpGet(SCRIPT_URL)
+        end)
+
+        if not ok then
+            return false, "Gagal mengunduh dari GitHub!"
+        end
+
+        local fn, err = loadstring(res)
+        if not fn then
+            return false, "Error parsing script: " .. tostring(err)
+        end
+
+        local execOk, execErr = pcall(fn)
+        if not execOk then
+            return false, "Runtime error: " .. tostring(execErr)
+        end
+
+        return true, nil
+    end
+
+    -- 3. Pembuatan GUI Loader
+    local parent = (gethui and gethui()) or game:GetService("CoreGui")
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "SkyPLoader"
+    gui.ResetOnSpawn = false
+
+    pcall(function() gui.Parent = parent end)
+    if not gui.Parent then
+        gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    end
+
+    local frame = Instance.new("Frame", gui)
+    frame.Size = UDim2.new(0, 280, 0, 160)
+    frame.Position = UDim2.new(0.5, -140, 0.5, -80)
+    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    frame.Active = true
+    frame.Draggable = true
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
+    -- Stroke border tipis
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(60, 60, 70)
+    stroke.Thickness = 1.2
+
+    -- Judul
+    local title = Instance.new("TextLabel", frame)
+    title.Size = UDim2.new(1, 0, 0, 36)
+    title.BackgroundTransparency = 1
+    title.Text = "SkyP Loader"
+    title.TextColor3 = Color3.new(1, 1, 1)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 16
+
+    -- Sub-label
+    local subtitle = Instance.new("TextLabel", frame)
+    subtitle.Size = UDim2.new(1, 0, 0, 20)
+    subtitle.Position = UDim2.new(0, 0, 0, 34)
+    subtitle.BackgroundTransparency = 1
+    subtitle.Text = "GitHub Direct Integration"
+    subtitle.TextColor3 = Color3.fromRGB(150, 150, 160)
+    subtitle.Font = Enum.Font.Gotham
+    subtitle.TextSize = 12
+
+    -- Tombol Load
+    local btn = Instance.new("TextButton", frame)
+    btn.Size = UDim2.new(1, -30, 0, 38)
+    btn.Position = UDim2.new(0, 15, 0, 68)
+    btn.Text = "Jalankan SkyP"
+    btn.BackgroundColor3 = Color3.fromRGB(70, 110, 255)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+    -- Label Status
+    local status = Instance.new("TextLabel", frame)
+    status.Size = UDim2.new(1, -20, 0, 30)
+    status.Position = UDim2.new(0, 10, 0, 115)
+    status.BackgroundTransparency = 1
+    status.Text = "Siap untuk dimuat"
+    status.TextColor3 = Color3.fromRGB(160, 160, 170)
+    status.Font = Enum.Font.Gotham
+    status.TextSize = 12
+
+    local isBusy = false
+    btn.MouseButton1Click:Connect(function()
+        if isBusy then return end
+        isBusy = true
+        status.TextColor3 = Color3.fromRGB(255, 220, 90)
+        status.Text = "Mengunduh script dari GitHub..."
+
+        task.spawn(function()
+            local ok, err = executeSkyP()
+            if ok then
+                status.TextColor3 = Color3.fromRGB(90, 255, 120)
+                status.Text = "Berhasil dimuat!"
+                task.wait(1)
+                gui:Destroy()
+            else
+                status.TextColor3 = Color3.fromRGB(255, 90, 90)
+                status.Text = err or "Gagal memuat"
+                isBusy = false
+            end
+        end)
+    end)
