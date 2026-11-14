@@ -3,7 +3,7 @@
     -- =================================================================
     local SCRIPT_URL =
     "https://raw.githubusercontent.com/muhammadkevinizaz/sky/refs/heads/m
-    ain/skyp.lua"
+    ain/skyp"
 
     -- 1. Inisialisasi Environment Session agar skyp.lua tidak error
     local function initSession()
